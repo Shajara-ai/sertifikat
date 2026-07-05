@@ -1,6 +1,5 @@
 # Abaikan folder output yang berisi PDF cetakan lokal
 output/pdf/
-output/
 
 # Abaikan folder pembaca skrip lokal
 pembaca qr code/
