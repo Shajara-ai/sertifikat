@@ -1,1 +1,9 @@
+# Abaikan folder output yang berisi PDF cetakan lokal
 output/pdf/
+
+# Abaikan folder pembaca skrip lokal
+pembaca qr code/
+
+# Abaikan file data mentah Excel & Template
+*.xlsx
+*.pptx
