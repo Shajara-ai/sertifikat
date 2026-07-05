@@ -150,5 +150,26 @@ const certificateDatabase = {
         "role": "Ketua Program Studi Keperawatan"
       }
     ]
+  },
+  "CERT-FIKES-UF-2026-010": {
+    "name": "rani",
+    "role": "Peserta",
+    "activity": "Pelatihan CPR Dasar",
+    "date": "2026-07-05 16:07:55",
+    "pdfUrl": "https://shajara-ai.github.io/sertifikat/pdf/CERT-FIKES-UF-2026-010.pdf",
+    "signers": [
+      {
+        "name": "Prof. Dr. dr. Siti Aminah, M.Kes",
+        "role": "Dekan FIKES - UF"
+      },
+      {
+        "name": "Dr. dr. H. Ahmad Fauzi, M.H.Kes",
+        "role": "Wakil Dekan I FIKES - UF"
+      },
+      {
+        "name": "Ns. Sri Wahyuni, M.Kep.",
+        "role": "Ketua Program Studi Keperawatan"
+      }
+    ]
   }
 };
