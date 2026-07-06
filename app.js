@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const certIdParam = urlParams.get('id');
 
-    // SEDERHANA: Langsung fetch ke root folder tanpa sub-folder output
-    fetch('database.json')
+    // Menambahkan parameter timestamp agar browser selalu mengambil data terbaru tanpa cache
+    fetch(`database.json?v=${new Date().getTime()}`)
         .then(response => {
             if (!response.ok) throw new Error("Gagal memuat berkas database.json");
             return response.json();
