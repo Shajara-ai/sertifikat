@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Inisialisasi ikon dari Lucide
     lucide.createIcons();
 
     // DOM Elemen Utama
@@ -12,9 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseScanner = document.getElementById("btn-close-scanner");
     const btnBackList = document.querySelectorAll(".btn-back");
     const scannerContainer = document.getElementById("scanner-container");
-    
-    // ✂️ DIHAPUS: Tombol unduh sudah tidak ada di HTML
-    // const btnDownloadPdf = document.getElementById("btn-download-pdf");
 
     // Elemen Pengisi Data Detail Keberhasilan
     const resName = document.getElementById("res-name");
@@ -27,29 +25,38 @@ document.addEventListener("DOMContentLoaded", () => {
     let html5QrCode = null;
     let certificateDatabase = null;
 
+    // Ambil parameter dari URL (?id=CERT-XXX)
     const urlParams = new URLSearchParams(window.location.search);
     const certIdParam = urlParams.get('id');
 
-    // Menambahkan parameter timestamp agar browser selalu mengambil data terbaru tanpa cache
-    fetch(`database.json?v=${new Date().getTime()}`)
-        .then(response => {
-            if (!response.ok) throw new Error("Gagal memuat berkas database.json");
-            return response.json();
-        })
-        .then(data => {
-            certificateDatabase = data;
-            if (certIdParam) {
-                verifyCertificate(certIdParam.trim());
-            } else {
-                showView("home");
-            }
-        })
-        .catch(error => {
-            console.error("Kesalahan memuat database:", error);
-            if (certIdParam) showView("failed");
-            else showView("home");
-        });
+    // ⚡ BYPASS CACHE STRATEGY: Memaksa browser mengambil data paling baru langsung dari server GitHub
+    fetch(`database.json?v=${new Date().getTime()}`, {
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Gagal memuat berkas database.json");
+        return response.json();
+    })
+    .then(data => {
+        certificateDatabase = data;
+        // Jika ada parameter ID di URL, langsung lakukan verifikasi otomatis
+        if (certIdParam) {
+            verifyCertificate(certIdParam.trim());
+        } else {
+            showView("home");
+        }
+    })
+    .catch(error => {
+        console.error("Kesalahan memuat database:", error);
+        if (certIdParam) showView("failed");
+        else showView("home");
+    });
 
+    // Event Listener Tombol Verifikasi Manual
     btnVerify.addEventListener("click", () => {
         const certId = inputCertId.value.trim();
         if (certId) {
@@ -63,12 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") btnVerify.click();
     });
 
+    // Event Listener Tombol Kembali
     btnBackList.forEach(btn => {
         btn.addEventListener("click", () => {
             window.location.href = window.location.pathname;
         });
     });
 
+    // Event Listener Kamera/Scanner
     btnStartScan.addEventListener("click", () => {
         scannerContainer.classList.remove("hidden");
         btnStartScan.classList.add("hidden");
@@ -79,65 +88,65 @@ document.addEventListener("DOMContentLoaded", () => {
         stopScanner();
     });
 
+    // Fungsi Utama Verifikasi Sertifikat
     function verifyCertificate(id) {
-    if (!certificateDatabase) {
-        showView("failed");
-        return;
-    }
-
-    // 1. Bersihkan ID dari URL (hilangkan spasi depan-belakang dan ubah ke HURUF BESAR)
-    const cleanId = id.trim().toUpperCase();
-
-    // 2. Cari key di database secara case-insensitive
-    const certKey = Object.keys(certificateDatabase).find(
-        key => key.trim().toUpperCase() === cleanId
-    );
-
-    // 3. Pastikan certKey benar-benar ditemukan di dalam database
-    if (certKey && certificateDatabase[certKey]) {
-        const data = certificateDatabase[certKey];
-        
-        // Isi data ke elemen HTML
-        resName.textContent = data.name || "-";
-        resRole.textContent = data.role || "Peserta";
-        resActivity.innerHTML = data.activity || "-"; // Mendukung tag <i> otomatis
-        resDate.textContent = data.date || "-";
-        resId.textContent = certKey; // Menampilkan ID asli dari database
-        
-        // Kontainer Dinamis Penandatangan
-        signersContainer.innerHTML = "";
-        if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
-            data.signers.forEach((signer) => {
-                const detailRow = document.createElement("div");
-                detailRow.className = "detail-row";
-                
-                const labelText = signer.role || "Penandatangan";
-                const signerName = signer.name || "-";
-                
-                detailRow.innerHTML = `
-                    <span class="detail-label">${labelText}</span>
-                    <span class="detail-value font-medium text-slate-200">${signerName}</span>
-                `;
-                signersContainer.appendChild(detailRow);
-            });
-        } else {
-            // Cadangan default jika data signers kosong
-            const detailRow = document.createElement("div");
-            detailRow.className = "detail-row";
-            detailRow.innerHTML = `
-                <span class="detail-label">Dekan FIKES - UF</span>
-                <span class="detail-value font-medium text-slate-200">Prof. Dr. dr. Siti Aminah, M.Kes</span>
-            `;
-            signersContainer.appendChild(detailRow);
+        if (!certificateDatabase) {
+            showView("failed");
+            return;
         }
 
-        showView("success");
-    } else {
-        // Jika tidak ditemukan atau database corrupt, lempar ke halaman failed
-        showView("failed");
-    }
-}
+        // Antisipasi ketidakcocokan huruf besar/kecil dari input URL
+        const cleanId = id.trim().toUpperCase();
 
+        // Cari Key di database secara Case-Insensitive
+        const certKey = Object.keys(certificateDatabase).find(
+            key => key.trim().toUpperCase() === cleanId
+        );
+
+        if (certKey && certificateDatabase[certKey]) {
+            const data = certificateDatabase[certKey];
+            
+            // Masukkan data dasar ke HTML
+            resName.textContent = data.name || "-";
+            resRole.textContent = data.role || "Peserta";
+            resActivity.innerHTML = data.activity || "-"; // Mendukung render tag <i> otomatis
+            resDate.textContent = data.date || "-";
+            resId.textContent = certKey;
+            
+            // Loop data Penandatangan secara dinamis berdasarkan data JSON
+            signersContainer.innerHTML = "";
+            if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
+                data.signers.forEach((signer) => {
+                    const detailRow = document.createElement("div");
+                    detailRow.className = "detail-row";
+                    
+                    const labelText = signer.role || "Penandatangan";
+                    const signerName = signer.name || "-";
+                    
+                    detailRow.innerHTML = `
+                        <span class="detail-label">${labelText}</span>
+                        <span class="detail-value font-medium text-slate-200">${signerName}</span>
+                    `;
+                    signersContainer.appendChild(detailRow);
+                });
+            } else {
+                // Aturan fallback jika field penandatangan kosong di database
+                const detailRow = document.createElement("div");
+                detailRow.className = "detail-row";
+                detailRow.innerHTML = `
+                    <span class="detail-label">Dekan FIKES - UF</span>
+                    <span class="detail-value font-medium text-slate-200">Prof. Dr. dr. Siti Aminah, M.Kes</span>
+                `;
+                signersContainer.appendChild(detailRow);
+            }
+
+            showView("success");
+        } else {
+            showView("failed");
+        }
+    }
+
+    // Navigasi View Kartu Tampilan
     function showView(viewName) {
         viewHome.classList.add("hidden");
         viewSuccess.classList.add("hidden");
@@ -148,12 +157,13 @@ document.addEventListener("DOMContentLoaded", () => {
         else viewHome.classList.remove("hidden");
     }
 
+    // Fungsi Kamera Scanner QR
     function startScanner() {
         html5QrCode = new Html5Qrcode("qr-reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
             .catch(() => {
-                alert("Akses kamera ditolak.");
+                alert("Akses kamera ditolak atau tidak ditemukan.");
                 stopScanner();
             });
     }
@@ -185,10 +195,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (idParam) certId = idParam;
             }
         } catch (e) {
-            console.error(e);
+            console.error("Gagal memproses URL QR Code:", e);
         }
         window.location.href = `?id=${encodeURIComponent(certId.trim())}`;
     }
 
-    function onScanFailure() {}
+    function onScanFailure() {
+        // Callback silent saat kamera mencari QR Code
+    }
 });
