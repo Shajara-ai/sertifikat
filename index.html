@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifikasi Sertifikat Digital | FIKES - UF</title>
-    <meta name="description" content="Halaman verifikasi resmi untuk sertifikat digital Dekan Fakultas Ilmu Kesehatan (FIKES) - Universitas Fiktif secara digital.">
+    <meta name="description" content="Halaman verifikasi resmi untuk sertifikat digital Dekan Fakultas Ilmu Kesehatan (FIKES) - Universitas Faletehan secara digital.">
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,8 +22,6 @@
         <!-- HEADER -->
         <header class="header">
             <div class="logo-container">
-                <!-- SEBELUMNYA: <i data-lucide="shield-check" class="logo-icon"></i> -->
-                <!-- DIGANTI MENJADI: -->
                 <img src="logo_2.png" alt="Logo FIKES" class="logo-icon">
                 
                 <div class="logo-text">
@@ -109,27 +107,24 @@
                 </div>
                 <!-- Kontainer Dinamis Penandatangan -->
                 <div id="signers-container" style="display: contents;">
-                    <!-- Penandatangan dinamis akan dimasukkan di sini via app.js -->
+                    <!-- Penandatangan dinamis dimasukkan di sini via app.js -->
                 </div>
             </div>
 
-            <!-- KOTAK PERNYATAAN RESMI (JUSTIFY) -->
+            <!-- KOTAK PERNYATAAN RESMI -->
             <div class="disclaimer-box" style="margin-top: 28px; padding: 18px; background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.2); border-left: 4px solid #10b981; border-radius: 8px; text-align: left; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <!-- Ikon Pelindung Resmi -->
                     <i data-lucide="shield-alert" style="color: #10b981; width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;"></i>
                     <div style="font-family: 'Inter', sans-serif; width: 100%;">
                         <h4 style="margin: 0 0 6px 0; color: #10b981; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Pernyataan Resmi Keabsahan</h4>
-                        <!-- Ditambahkan text-align: justify; agar rata kanan kiri -->
                         <p style="margin: 0; color: #94a3b8; font-size: 0.8rem; line-height: 1.6; font-weight: 400; text-align: justify;">
-                            Halaman ini merupakan media legalisasi data digital resmi <span style="color: #10b981; font-weight: 500;">Fakultas Ilmu Kesehatan Universitas Faletehan</span>. Dokumen yang divalidasi melalui sistem ini dinyatakan <span style="color: #10b981; font-weight: 600;">Sah & Valid</span>, benar telah ditandatangani secara elektronik oleh pejabat berwenang, dan memiliki kekuatan hukum administrasi yang sah.
+                            Halaman ini merupakan media legalisasi data digital resmi <span style="color: #10b981; font-weight: 500;">Fakultas Ilmu Kesehatan Universitas Faletehan</span>. Dokumen yang divalidasi melalui sistem ini dinyatakan <span style="color: #10b981; font-weight: 600;">Sah & Valid</span>, benar telah ditandatangani secara elektronik oleh pejabat berwenang, dan memiliki kekuatan hukum hukum administrasi yang sah.
                         </p>
                     </div>
                 </div>
             </div>
 
             <div class="action-buttons">
-                <!-- Tombol disembunyikan secara visual, tetapi ID tetap ada agar JavaScript tidak error -->
                 <a id="btn-download-pdf" href="#" target="_blank" class="btn-success" style="display: none;">
                     <i data-lucide="download" class="btn-icon"></i>
                     Unduh PDF Sertifikat
@@ -139,6 +134,7 @@
                     Kembali
                 </button>
             </div>
+        </section>
 
         <!-- VIEW: VERIFICATION RESULT (FAILED) -->
         <section id="view-result-failed" class="card result-card failed hidden fade-in">
@@ -170,6 +166,10 @@
 
     <!-- html5-qrcode library for QR Code scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    
+    <!-- Memuat file data keluaran skrip otomatis python -->
+    <script src="output/database.js"></script>
+    
     <!-- App JS logic -->
     <script src="app.js"></script>
 </body>
