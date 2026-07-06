@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Inisialisasi ikon Lucide
     lucide.createIcons();
 
-    // DOM Elements
+    // DOM Elemen Utama
     const viewHome = document.getElementById("view-home");
     const viewSuccess = document.getElementById("view-result-success");
     const viewFailed = document.getElementById("view-result-failed");
@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scannerContainer = document.getElementById("scanner-container");
     const btnDownloadPdf = document.getElementById("btn-download-pdf");
 
-    // Success details DOM elements
+    // Elemen Pengisi Data Detail Keberhasilan
     const resName = document.getElementById("res-name");
     const resRole = document.getElementById("res-role");
     const resActivity = document.getElementById("res-activity");
@@ -24,36 +24,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const signersContainer = document.getElementById("signers-container");
 
     let html5QrCode = null;
-    let certificateDatabase = null; // Diisi melalui Fetch API
 
-    // Muat database.json secara dinamis sebelum melakukan verifikasi
-    fetch("output/database.json")
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Gagal memuat file database.json");
-            }
-            return response.json();
-        })
-        .then(data => {
-            certificateDatabase = data;
-            
-            // Setelah database termuat, periksa parameter URL (?id=...)
-            const urlParams = new URLSearchParams(window.location.search);
-            const certIdParam = urlParams.get('id');
+    // 1. Ambil & Verifikasi parameter ID dari URL (?id=...) saat halaman dimuat
+    const urlParams = new URLSearchParams(window.location.search);
+    const certIdParam = urlParams.get('id');
 
-            if (certIdParam) {
-                verifyCertificate(certIdParam.trim());
-            } else {
-                showView("home");
-            }
-        })
-        .catch(err => {
-            console.error("Error memuat database aplikasi:", err);
-            // Fallback jika dibuka lokal via file:// tanpa server atau jika rute berbeda
-            showView("home");
-        });
+    if (certIdParam) {
+        verifyCertificate(certIdParam.trim());
+    } else {
+        showView("home");
+    }
 
-    // Event Handler untuk tombol Verifikasi manual
+    // 2. Handler klik tombol Verifikasi manual
     btnVerify.addEventListener("click", () => {
         const certId = inputCertId.value.trim();
         if (certId) {
@@ -63,21 +45,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Handle enter key on input
+    // Jalankan verifikasi jika menekan tombol Enter pada input teks
     inputCertId.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
             btnVerify.click();
         }
     });
 
-    // Event Handler untuk tombol Kembali
+    // 3. Handler Tombol Kembali ke Beranda
     btnBackList.forEach(btn => {
         btn.addEventListener("click", () => {
             window.location.href = window.location.pathname;
         });
     });
 
-    // Scanner QR Code
+    // 4. Integrasi Scanner Kamera QR Code
     btnStartScan.addEventListener("click", () => {
         scannerContainer.classList.remove("hidden");
         btnStartScan.classList.add("hidden");
@@ -88,14 +70,15 @@ document.addEventListener("DOMContentLoaded", () => {
         stopScanner();
     });
 
-    // Fungsi Utama: Verifikasi sertifikat berdasarkan data JSON
+    // Fungsi Inti: Melakukan pemeriksaan data pada database variabel global
     function verifyCertificate(id) {
-        if (!certificateDatabase) {
-            console.error("Database sertifikat belum terisi atau gagal dimuat.");
+        if (typeof certificateDatabase === 'undefined') {
+            console.error("Variabel data 'certificateDatabase' tidak ditemukan. Pastikan file output/database.js termuat.");
             showView("failed");
             return;
         }
 
+        // Pencarian kunci data (Case-Insensitive)
         const certKey = Object.keys(certificateDatabase).find(
             key => key.toLowerCase() === id.toLowerCase()
         );
@@ -103,16 +86,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if (certKey) {
             const data = certificateDatabase[certKey];
             
-            // Pengisian data utama ke elemen HTML dengan fallback aman
-            resName.textContent = data.name || "-";
-            resRole.textContent = data.role || "Peserta";
-            resActivity.textContent = data.activity || "-";
-            resDate.textContent = data.date || "-";
+            // Pengisian Teks Utama dengan Toleransi Struktur Atribut Kompatibilitas (Format Baru/Lama)
+            resName.textContent = data.name || data.nama || data.penerima || "-";
+            resRole.textContent = data.role || data.peran || "Peserta";
+            resActivity.textContent = data.activity || data.kegiatan || data.nama_kegiatan || "-";
+            resDate.textContent = data.date || data.tanggal || data.tanggal_terbit || "-";
             resId.textContent = certKey;
             
-            btnDownloadPdf.href = data.pdfUrl || "#";
+            // Atur URL berkas unduhan sertifikat jika tersedia
+            if (data.pdfUrl || data.pdf_url) {
+                btnDownloadPdf.href = data.pdfUrl || data.pdf_url;
+                btnDownloadPdf.style.display = "inline-flex";
+            } else {
+                btnDownloadPdf.style.display = "none";
+            }
 
-            // Render penandatangan secara dinamis dari array "signers"
+            // Pemrosesan komponen Kontainer Penandatangan secara Dinamis
             signersContainer.innerHTML = "";
             if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
                 const totalSigners = data.signers.length;
@@ -121,8 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     detailRow.className = "detail-row";
                     
                     const labelText = totalSigners > 1 ? `Penandatangan ${index + 1}` : "Penandatangan";
-                    const signerRole = signer.role || "-";
-                    const signerName = signer.name || "-";
+                    const signerRole = signer.role || signer.jabatan || "-";
+                    const signerName = signer.name || signer.nama || "-";
                     
                     detailRow.innerHTML = `
                         <span class="detail-label">${labelText}</span>
@@ -134,14 +123,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     signersContainer.appendChild(detailRow);
                 });
             } else {
-                // Fallback default jika field signers tidak terdefinisi
+                // Cadangan otomatis (Fallback) jika struktur array signers kosong / format lama
                 const detailRow = document.createElement("div");
                 detailRow.className = "detail-row";
+                
+                const fallbackRole = data.penandatangan_jabatan || "Dekan FIKES - UF";
+                const fallbackName = data.penandatangan_nama || "Prof. Dr. dr. Siti Aminah, M.Kes";
+                
                 detailRow.innerHTML = `
                     <span class="detail-label">Penandatangan</span>
                     <div class="signature-info">
-                        <span class="detail-value block">Dekan FIKES - UF</span>
-                        <span class="text-xs text-slate-400 block italic">Prof. Dr. dr. Siti Aminah, M.Kes</span>
+                        <span class="detail-value block">${fallbackRole}</span>
+                        <span class="text-xs text-slate-400 block italic">${fallbackName}</span>
                     </div>
                 `;
                 signersContainer.appendChild(detailRow);
@@ -153,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Fungsi navigasi view
+    // Fungsi Manajemen Alur Tampilan Blok Halaman
     function showView(viewName) {
         viewHome.classList.add("hidden");
         viewSuccess.classList.add("hidden");
@@ -168,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Fungsi memulai scanner kamera
+    // Aktivasi kamera scanner QR Code
     function startScanner() {
         html5QrCode = new Html5Qrcode("qr-reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -179,13 +172,13 @@ document.addEventListener("DOMContentLoaded", () => {
             onScanSuccess,
             onScanFailure
         ).catch(err => {
-            console.error("Gagal mengakses kamera:", err);
-            alert("Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.");
+            console.error("Gagal mendeteksi modul kamera:", err);
+            alert("Akses kamera ditolak atau tidak ditemukan.");
             stopScanner();
         });
     }
 
-    // Fungsi menghentikan scanner kamera
+    // Deaktivasi fungsional kamera scanner
     function stopScanner() {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
@@ -193,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnStartScan.classList.remove("hidden");
                 html5QrCode = null;
             }).catch(err => {
-                console.error("Gagal menghentikan scanner:", err);
+                console.error("Kesalahan penutupan kamera:", err);
                 scannerContainer.classList.add("hidden");
                 btnStartScan.classList.remove("hidden");
                 html5QrCode = null;
@@ -216,12 +209,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } catch (e) {
-            console.error("Error memproses URL scan:", e);
+            console.error("Format data URL qr tidak valid:", e);
         }
         window.location.href = `?id=${encodeURIComponent(certId.trim())}`;
     }
 
     function onScanFailure(error) {
-        // Proses pemindaian berkelanjutan, log dilewati untuk performa UI
+        // Pemindaian berulang dinamis, log diabaikan demi efisiensi render
     }
 });
