@@ -12,9 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseScanner = document.getElementById("btn-close-scanner");
     const btnBackList = document.querySelectorAll(".btn-back");
     const scannerContainer = document.getElementById("scanner-container");
-    
-    // ✂️ DIHAPUS: Tombol unduh sudah tidak ada di HTML
-    // const btnDownloadPdf = document.getElementById("btn-download-pdf");
+    const btnDownloadPdf = document.getElementById("btn-download-pdf");
 
     // Elemen Pengisi Data Detail Keberhasilan
     const resName = document.getElementById("res-name");
@@ -98,15 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
             resDate.textContent = data.date || "-";
             resId.textContent = certKey;
             
-            // ✂️ DIHAPUS: Logika manipulasi tombol unduh PDF dimatikan total
-            /*
             if (data.pdfUrl) {
                 btnDownloadPdf.href = data.pdfUrl;
                 btnDownloadPdf.style.display = "inline-flex";
             } else {
                 btnDownloadPdf.style.display = "none";
             }
-            */
 
             // FLEKSIBEL: Langsung fokus jadikan jabatan (role) dari Excel sebagai label kiri
             signersContainer.innerHTML = "";
