@@ -80,66 +80,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function verifyCertificate(id) {
-        if (!certificateDatabase) {
-            showView("failed");
-            return;
-        }
+    if (!certificateDatabase) {
+        showView("failed");
+        return;
+    }
 
-        const certKey = Object.keys(certificateDatabase).find(
-            key => key.toLowerCase() === id.toLowerCase()
-        );
+    // 1. Bersihkan ID dari URL (hilangkan spasi depan-belakang dan ubah ke HURUF BESAR)
+    const cleanId = id.trim().toUpperCase();
 
-        if (certKey) {
-            const data = certificateDatabase[certKey];
-            
-            resName.textContent = data.name || "-";
-            resRole.textContent = data.role || "Peserta";
-            resActivity.innerHTML = data.activity || "-"; // Mendukung tag <i> otomatis
-            resDate.textContent = data.date || "-";
-            resId.textContent = certKey;
-            
-            // ✂️ DIHAPUS: Logika manipulasi tombol unduh PDF dimatikan total
-            /*
-            if (data.pdfUrl) {
-                btnDownloadPdf.href = data.pdfUrl;
-                btnDownloadPdf.style.display = "inline-flex";
-            } else {
-                btnDownloadPdf.style.display = "none";
-            }
-            */
+    // 2. Cari key di database secara case-insensitive
+    const certKey = Object.keys(certificateDatabase).find(
+        key => key.trim().toUpperCase() === cleanId
+    );
 
-            // FLEKSIBEL: Langsung fokus jadikan jabatan (role) dari Excel sebagai label kiri
-            signersContainer.innerHTML = "";
-            if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
-                data.signers.forEach((signer) => {
-                    const detailRow = document.createElement("div");
-                    detailRow.className = "detail-row";
-                    
-                    const labelText = signer.role || "Penandatangan";
-                    const signerName = signer.name || "-";
-                    
-                    detailRow.innerHTML = `
-                        <span class="detail-label">${labelText}</span>
-                        <span class="detail-value font-medium text-slate-200">${signerName}</span>
-                    `;
-                    signersContainer.appendChild(detailRow);
-                });
-            } else {
-                // Cadangan default jika data kosong
+    // 3. Pastikan certKey benar-benar ditemukan di dalam database
+    if (certKey && certificateDatabase[certKey]) {
+        const data = certificateDatabase[certKey];
+        
+        // Isi data ke elemen HTML
+        resName.textContent = data.name || "-";
+        resRole.textContent = data.role || "Peserta";
+        resActivity.innerHTML = data.activity || "-"; // Mendukung tag <i> otomatis
+        resDate.textContent = data.date || "-";
+        resId.textContent = certKey; // Menampilkan ID asli dari database
+        
+        // Kontainer Dinamis Penandatangan
+        signersContainer.innerHTML = "";
+        if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
+            data.signers.forEach((signer) => {
                 const detailRow = document.createElement("div");
                 detailRow.className = "detail-row";
+                
+                const labelText = signer.role || "Penandatangan";
+                const signerName = signer.name || "-";
+                
                 detailRow.innerHTML = `
-                    <span class="detail-label">Dekan FIKES - UF</span>
-                    <span class="detail-value font-medium text-slate-200">Prof. Dr. dr. Siti Aminah, M.Kes</span>
+                    <span class="detail-label">${labelText}</span>
+                    <span class="detail-value font-medium text-slate-200">${signerName}</span>
                 `;
                 signersContainer.appendChild(detailRow);
-            }
-
-            showView("success");
+            });
         } else {
-            showView("failed");
+            // Cadangan default jika data signers kosong
+            const detailRow = document.createElement("div");
+            detailRow.className = "detail-row";
+            detailRow.innerHTML = `
+                <span class="detail-label">Dekan FIKES - UF</span>
+                <span class="detail-value font-medium text-slate-200">Prof. Dr. dr. Siti Aminah, M.Kes</span>
+            `;
+            signersContainer.appendChild(detailRow);
         }
+
+        showView("success");
+    } else {
+        // Jika tidak ditemukan atau database corrupt, lempar ke halaman failed
+        showView("failed");
     }
+}
 
     function showView(viewName) {
         viewHome.classList.add("hidden");
