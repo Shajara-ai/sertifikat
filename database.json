@@ -252,5 +252,18 @@
         "role": "Ketua Program Studi Keperawatan"
       }
     ]
+  },
+  "CERT-FIKES-UF-2026-015": {
+    "name": "5",
+    "role": "Peserta",
+    "activity": "Pelatihan CPR Dasar",
+    "date": "2026-07-05 16:07:60",
+    "pdfUrl": "https://shajara-ai.github.io/sertifikat/pdf/CERT-FIKES-UF-2026-015.pdf",
+    "signers": [
+      {
+        "name": "Prof. Dr. dr. Siti Aminah, M.Kes",
+        "role": "Dekan FIKES - UF"
+      }
+    ]
   }
 }
