@@ -24,18 +24,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const signersContainer = document.getElementById("signers-container");
 
     let html5QrCode = null;
+    let certificateDatabase = null; // Diisi melalui Fetch API
 
-    // 1. Cek parameter URL (?id=...) saat halaman dimuat
-    const urlParams = new URLSearchParams(window.location.search);
-    const certIdParam = urlParams.get('id');
+    // Muat database.json secara dinamis sebelum melakukan verifikasi
+    fetch("output/database.json")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Gagal memuat file database.json");
+            }
+            return response.json();
+        })
+        .then(data => {
+            certificateDatabase = data;
+            
+            // Setelah database termuat, periksa parameter URL (?id=...)
+            const urlParams = new URLSearchParams(window.location.search);
+            const certIdParam = urlParams.get('id');
 
-    if (certIdParam) {
-        verifyCertificate(certIdParam.trim());
-    } else {
-        showView("home");
-    }
+            if (certIdParam) {
+                verifyCertificate(certIdParam.trim());
+            } else {
+                showView("home");
+            }
+        })
+        .catch(err => {
+            console.error("Error memuat database aplikasi:", err);
+            // Fallback jika dibuka lokal via file:// tanpa server atau jika rute berbeda
+            showView("home");
+        });
 
-    // 2. Event Handler untuk tombol Verifikasi manual
+    // Event Handler untuk tombol Verifikasi manual
     btnVerify.addEventListener("click", () => {
         const certId = inputCertId.value.trim();
         if (certId) {
@@ -52,14 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 3. Event Handler untuk tombol Kembali
+    // Event Handler untuk tombol Kembali
     btnBackList.forEach(btn => {
         btn.addEventListener("click", () => {
             window.location.href = window.location.pathname;
         });
     });
 
-    // 4. Scanner QR Code
+    // Scanner QR Code
     btnStartScan.addEventListener("click", () => {
         scannerContainer.classList.remove("hidden");
         btnStartScan.classList.add("hidden");
@@ -70,10 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
         stopScanner();
     });
 
-    // Fungsi Utama: Verifikasi sertifikat berdasarkan database.js
+    // Fungsi Utama: Verifikasi sertifikat berdasarkan data JSON
     function verifyCertificate(id) {
-        if (typeof certificateDatabase === 'undefined') {
-            console.error("Database sertifikat (database.js) tidak terdeteksi.");
+        if (!certificateDatabase) {
+            console.error("Database sertifikat belum terisi atau gagal dimuat.");
             showView("failed");
             return;
         }
@@ -85,15 +103,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (certKey) {
             const data = certificateDatabase[certKey];
             
-            resName.textContent = data.name;
-            resRole.textContent = data.role;
-            resActivity.textContent = data.activity;
-            resDate.textContent = data.date;
+            // Pengisian data utama ke elemen HTML dengan fallback aman
+            resName.textContent = data.name || "-";
+            resRole.textContent = data.role || "Peserta";
+            resActivity.textContent = data.activity || "-";
+            resDate.textContent = data.date || "-";
             resId.textContent = certKey;
             
             btnDownloadPdf.href = data.pdfUrl || "#";
 
-            // Render penandatangan secara dinamis
+            // Render penandatangan secara dinamis dari array "signers"
             signersContainer.innerHTML = "";
             if (data.signers && Array.isArray(data.signers) && data.signers.length > 0) {
                 const totalSigners = data.signers.length;
@@ -101,20 +120,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     const detailRow = document.createElement("div");
                     detailRow.className = "detail-row";
                     
-                    // Gunakan penomoran jika penandatangan > 1
                     const labelText = totalSigners > 1 ? `Penandatangan ${index + 1}` : "Penandatangan";
+                    const signerRole = signer.role || "-";
+                    const signerName = signer.name || "-";
                     
                     detailRow.innerHTML = `
                         <span class="detail-label">${labelText}</span>
                         <div class="signature-info">
-                            <span class="detail-value block">${signer.role}</span>
-                            <span class="text-xs text-slate-400 block italic">${signer.name}</span>
+                            <span class="detail-value block">${signerRole}</span>
+                            <span class="text-xs text-slate-400 block italic">${signerName}</span>
                         </div>
                     `;
                     signersContainer.appendChild(detailRow);
                 });
             } else {
-                // Fallback jika tidak ada field signers
+                // Fallback default jika field signers tidak terdefinisi
                 const detailRow = document.createElement("div");
                 detailRow.className = "detail-row";
                 detailRow.innerHTML = `
@@ -202,6 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function onScanFailure(error) {
-        // Tembakan scanner terus menerus, abaikan log error di UI
+        // Proses pemindaian berkelanjutan, log dilewati untuk performa UI
     }
 });
