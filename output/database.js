@@ -152,7 +152,7 @@ const certificateDatabase = {
     ]
   },
   "CERT-FIKES-UF-2026-010": {
-    "nama": "santi",
+    "nama": "mengrowel",
     "peran": "Peserta",
     "kegiatan": "Pelatihan CPR Dasar",
     "tanggal": "2026-07-05 16:07:55",
